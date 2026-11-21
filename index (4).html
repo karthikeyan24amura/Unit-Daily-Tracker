@@ -1,0 +1,643 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unit Daily Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffffff; --paper: #f7f6f1; --card: #ffffff; --ink: #000000; --text: #202020; --muted: #6b6b66; --line: #e4e2dc;
+    --serif: "Playfair Display", Georgia, "Times New Roman", serif;
+    --sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --good: #128245; --good-soft: #e8f4ed; --bad: #a3271f; --bad-soft: #f8ebe8; --warn-soft: #fbf6e7;
+    --radius: 6px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 400 15px/1.5 var(--sans); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+  header { background: rgba(255,255,255,.96); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; backdrop-filter: blur(6px); }
+  .bar { max-width: 1120px; margin: 0 auto; padding: 14px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .wordmark { font: 400 20px/1 var(--sans); letter-spacing: .42em; color: var(--ink); text-transform: uppercase; }
+  .brand { display: flex; flex-direction: column; gap: 4px; }
+  .sub { font: italic 400 15px/1 var(--serif); color: var(--muted); }
+  .who { color: var(--muted); font-size: 13px; border-left: 1px solid var(--line); padding-left: 16px; }
+  .spacer { flex: 1; }
+  main { max-width: 1120px; margin: 0 auto; padding: 24px 20px 48px; }
+  .tabs { display: flex; gap: 6px; }
+  .tab { border: 1px solid var(--ink); background: transparent; padding: 8px 16px; border-radius: var(--radius); cursor: pointer; font: 500 14px var(--sans); color: var(--ink); }
+  .tab.on { background: var(--ink); color: #fff; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 4px; padding: 22px 24px; margin-bottom: 18px; }
+  h2 { font: italic 500 30px/1.15 var(--serif); color: var(--ink); margin: 0 0 18px; letter-spacing: -.01em; }
+  h2 .muted { font: 400 13px var(--sans); }
+  h3 { font: 600 16px var(--sans); color: var(--ink); margin: 18px 0 10px; padding-top: 14px; border-top: 1px solid var(--line); }
+  h3:first-of-type { border-top: 0; padding-top: 0; margin-top: 4px; }
+  .muted { color: var(--muted); font-size: 13px; }
+  .row { display: flex; gap: 14px; flex-wrap: wrap; align-items: end; margin-bottom: 14px; }
+  label.ctl { display: flex; flex-direction: column; gap: 5px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+  input, select, textarea { font: 400 15px var(--sans); padding: 9px 12px; border: 1px solid #cfccc4; border-radius: var(--radius); background: #fff; color: var(--text); }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--ink); box-shadow: 0 0 0 3px rgba(0,0,0,.06); }
+  textarea { width: 100%; min-height: 64px; resize: vertical; }
+  button.primary { background: var(--ink); color: #fff; border: 0; padding: 13px 30px; border-radius: var(--radius); font: 600 15px var(--sans); cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.18); }
+  button.primary:hover { background: #222; }
+  button.primary:disabled { opacity: .55; cursor: default; }
+  button.link { background: none; border: 0; color: var(--ink); font: 500 14px var(--sans); cursor: pointer; padding: 4px; text-decoration: underline; text-underline-offset: 3px; }
+  fieldset { border: 0; border-top: 1px solid var(--line); padding: 16px 0 4px; margin: 0 0 6px; }
+  legend { font: italic 500 20px var(--serif); color: var(--ink); padding: 0 12px 0 0; }
+  .fgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px 18px; margin: 6px 0 12px; }
+  .fgrid label { display: flex; flex-direction: column; gap: 5px; font-size: 13px; color: var(--text); }
+  .fgrid input { width: 100%; }
+  .full { grid-column: 1 / -1; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 14px; }
+  .tile { border: 1px solid var(--line); border-radius: 4px; padding: 12px 14px; background: var(--paper); }
+  .tile .v { font: italic 500 30px/1.1 var(--serif); color: var(--ink); }
+  .tile .l { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .tile.bad { border-color: #e3bdb6; background: var(--bad-soft); }
+  .tile.bad .v { color: var(--bad); }
+  .sect { font-size: 11px; text-transform: uppercase; letter-spacing: .14em; color: var(--muted); margin: 14px 0 8px; }
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 4px; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+  tr:last-child td { border-bottom: 0; }
+  th:first-child, td:first-child, th.l, td.l { text-align: left; }
+  th { background: var(--paper); font-weight: 600; color: var(--ink); position: sticky; top: 0; }
+  td.bad { color: var(--bad); font-weight: 600; background: var(--bad-soft); }
+  .notes { font-size: 14px; margin: 8px 0 0; padding-left: 18px; }
+  .missing { background: var(--warn-soft); border-color: #ece0b8; }
+  .missing h3 { border: 0; padding: 0; margin-top: 0; }
+  .pill { display: inline-block; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: #fff; color: var(--text); font-size: 12px; margin: 3px 6px 3px 0; }
+  .login-wrap { margin: -24px -20px -48px; min-height: 100vh; display: grid; place-items: center; padding: 24px; background: var(--paper); }
+  .login { width: 100%; max-width: 420px; background: #fff; border: 1px solid var(--line); border-radius: 210px 210px 6px 6px; padding: 80px 36px 40px; text-align: center; }
+  .login .wordmark { display: block; margin-bottom: 26px; }
+  .login h1 { font: italic 500 38px/1.1 var(--serif); color: var(--ink); margin: 0 0 10px; }
+  .login p { margin: 0 0 24px; }
+  .login input { width: 100%; letter-spacing: .14em; text-transform: uppercase; text-align: center; }
+  .login button.primary { width: 100%; margin-top: 14px; }
+  .err { color: var(--bad); font-size: 13px; margin-top: 10px; min-height: 1em; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 11px 18px; border-radius: var(--radius); font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+  .formpick { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+  .status { font-size: 13px; color: var(--muted); }
+  @media (min-width: 900px) {
+    .bar { flex-wrap: nowrap; }
+    .who { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .spacer { display: none; }
+  }
+  @media (max-width: 640px) {
+    .who { border: 0; padding: 0; width: 100%; order: 3; }
+    h2 { font-size: 25px; }
+    .card { padding: 18px 16px; }
+    .login { padding: 64px 24px 32px; border-radius: 180px 180px 6px 6px; }
+  }
+  /* v2 additions */
+  .ctlrow select, .ctlrow input { min-width: 150px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 8px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 6px 4px 12px; border: 1px solid var(--ink); border-radius: 999px; font-size: 13px; background: #fff; }
+  .chip button { border: 0; background: none; cursor: pointer; font-size: 15px; line-height: 1; padding: 0 4px; color: var(--muted); }
+  .cpick { display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .cpick select { min-width: 220px; }
+  .newc { display: inline-flex; gap: 6px; align-items: center; }
+  .newc[hidden] { display: none; }
+  .itembox { grid-column: 1 / -1; border: 1px dashed #cfccc4; border-radius: 4px; padding: 12px 14px; background: var(--paper); }
+  .itembox .ttl { font-weight: 600; font-size: 13px; margin-bottom: 8px; color: var(--ink); }
+  .itemrow { display: grid; grid-template-columns: minmax(220px, 300px) 1fr auto; gap: 8px; align-items: start; margin-bottom: 8px; }
+  .itemrow textarea { min-height: 40px; }
+  .saved { font-size: 13px; margin: 0 0 8px; padding-left: 18px; color: var(--text); }
+  button.ghost { background: #fff; border: 1px solid var(--ink); color: var(--ink); padding: 7px 14px; border-radius: var(--radius); font: 500 13px var(--sans); cursor: pointer; }
+  button.sm { padding: 9px 16px; font-size: 14px; box-shadow: none; }
+  .filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
+  .item { border: 1px solid var(--line); border-radius: 4px; padding: 16px 18px; margin-bottom: 12px; background: #fff; }
+  .item.mb { border-left: 3px solid var(--ink); }
+  .ihead { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .ihead .client { font: italic 500 22px var(--serif); color: var(--ink); }
+  .imeta { font-size: 12px; color: var(--muted); margin: 4px 0 8px; letter-spacing: .02em; }
+  .inote { white-space: pre-wrap; margin-bottom: 8px; }
+  .badge { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--line); }
+  .s-Open { background: var(--bad-soft); color: var(--bad); border-color: #e3bdb6; }
+  .s-In-progress { background: var(--warn-soft); color: #7a5a00; border-color: #ece0b8; }
+  .s-Resolved { background: var(--good-soft); color: var(--good); border-color: #b9dcc7; }
+  .s-Entered-by-mistake { background: #f1f1f1; color: var(--muted); }
+  .log { font-size: 13px; margin: 0 0 10px; padding-left: 18px; color: var(--text); }
+  .log li { margin-bottom: 4px; }
+  .iform { display: grid; grid-template-columns: 1fr 170px auto; gap: 8px; align-items: start; }
+  .iform textarea { min-height: 40px; }
+  .ilist { list-style: none; padding: 0; margin: 0; }
+  .ilist li { display: grid; grid-template-columns: 96px 70px minmax(140px, 1fr) 2fr auto; gap: 10px; align-items: baseline; padding: 9px 0; border-top: 1px solid var(--line); font-size: 14px; }
+  .ilist li:first-child { border-top: 0; }
+  .ilist .c { font-weight: 600; color: var(--ink); }
+  .counts { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  @media (max-width: 640px) {
+    .itemrow, .iform { grid-template-columns: 1fr; }
+    .ilist li { grid-template-columns: 1fr 1fr; }
+    .cpick select { min-width: 0; width: 100%; }
+  }
+</style>
+</head>
+<body>
+<header id="hdr" hidden>
+  <div class="bar">
+    <div class="brand"><span class="wordmark">Amura</span><span class="sub">Unit Daily Tracker</span></div>
+    <span class="who" id="who"></span>
+    <span class="spacer"></span>
+    <div class="tabs" id="tabs"></div>
+    <button class="link" id="logout">Sign out</button>
+  </div>
+</header>
+<main id="app"></main>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== Your Apps Script Web App URL ===== */
+const API_URL = 'https://script.google.com/macros/s/AKfycbyHlPmaqZ7H9ovTnT7jESLTJP3DQGHaHDqGE-cv00Rrem-8z0ao-bYn7VJmDCp_7CG3/exec';
+/* ======================================== */
+
+const ENTRY_ORDER = ['doctor', 'l1', 'l15', 'stats'];
+const DASH_FORMS = ['doctor', 'l1', 'l15'];
+const S = {
+  code: '', user: null, cfg: null, view: 'dash', cache: {}, dashDate: null, statsDate: null,
+  entry: { form: null, team: null, date: null, coveredFor: '', period: 'Daily', draft: {}, loadedKey: '' },
+  fu: { type: 'all', status: 'open', team: 'all' }
+};
+const $ = sel => document.querySelector(sel);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const today = () => new Date().toLocaleDateString('en-CA');
+const shiftDate = (s, n) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+const allFields = f => f.sections.reduce((a, s) => a.concat(s.fields), []);
+const isNum = fl => !fl.type || fl.type === 'number';
+const store = {
+  get(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} },
+  del(k) { try { sessionStorage.removeItem(k); } catch (e) {} }
+};
+
+async function api(action, payload) {
+  if (!API_URL || API_URL.indexOf('PASTE_') === 0) throw new Error('API_URL is not set in index.html');
+  const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(Object.assign({ action, code: S.code }, payload || {})) });
+  const j = await res.json();
+  if (!j.ok) throw new Error(j.error || 'Request failed');
+  return j;
+}
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2600);
+}
+async function getData(date, force) {
+  if (!force && S.cache[date]) return S.cache[date];
+  const d = await api('data', { date });
+  S.cache[date] = d;
+  return d;
+}
+function setItems(items) { Object.values(S.cache).forEach(d => { d.items = items; }); }
+function mergeClients(c) { if (c) Object.keys(c).forEach(t => { S.cfg.clients[t] = c[t]; }); }
+
+/* ================= login ================= */
+function renderLogin(err) {
+  $('#hdr').hidden = true;
+  $('#app').innerHTML = `
+    <div class="login-wrap"><div class="login">
+      <span class="wordmark">Amura</span>
+      <h1>Unit Daily Tracker</h1>
+      <p class="muted">Enter your personal access code to continue.</p>
+      <form id="lf">
+        <input id="code" autocomplete="off" placeholder="Access code" required>
+        <button class="primary" id="lb">Sign in</button>
+        <div class="err">${esc(err || '')}</div>
+      </form>
+    </div></div>`;
+  $('#lf').onsubmit = async e => {
+    e.preventDefault();
+    $('#lb').disabled = true; $('#lb').textContent = 'Signing in…';
+    await login($('#code').value.trim().toUpperCase());
+  };
+}
+
+async function login(code) {
+  S.code = code;
+  try {
+    const r = await api('login');
+    S.user = r.user; S.cfg = r.config; S.cache = {};
+    store.set('udt_code', code);
+    S.dashDate = S.statsDate = S.entry.date = S.cfg.today || today();
+    S.entry.team = S.cfg.teams[0];
+    S.entry.form = ENTRY_ORDER.find(k => S.cfg.forms[k] && S.cfg.forms[k].canSubmit) || null;
+    resetCovered();
+    S.view = S.user.role === 'L1' && S.entry.form ? 'entry' : (hasDash() ? 'dash' : 'stats');
+    renderShell();
+  } catch (e) {
+    store.del('udt_code');
+    renderLogin(e.message);
+  }
+}
+const hasDash = () => DASH_FORMS.some(k => S.cfg.forms[k] && S.cfg.forms[k].scope !== 'none');
+
+/* ================= shell ================= */
+function renderShell() {
+  $('#hdr').hidden = false;
+  const units = [...new Set(Object.values(S.cfg.teamUnits || {}))];
+  $('#who').textContent = `${S.user.name} · ${S.user.roleLabel} · Unit ${units.join(', ') || S.user.unit} · Team ${S.cfg.teams.join(' & ')}`;
+  const tabs = [];
+  if (hasDash()) tabs.push(['dash', 'Dashboard']);
+  if (S.cfg.forms.stats && S.cfg.forms.stats.scope !== 'none') tabs.push(['stats', 'Client stats']);
+  if (S.cfg.canItems) tabs.push(['fu', 'Follow-ups']);
+  if (ENTRY_ORDER.some(k => S.cfg.forms[k] && S.cfg.forms[k].canSubmit)) tabs.push(['entry', 'Daily entry']);
+  $('#tabs').innerHTML = tabs.map(([k, l]) => `<button class="tab ${S.view === k ? 'on' : ''}" data-v="${k}">${l}</button>`).join('');
+  $('#tabs').querySelectorAll('.tab').forEach(b => b.onclick = () => { S.view = b.dataset.v; renderShell(); });
+  if (S.view === 'entry') renderEntry();
+  else if (S.view === 'stats') renderStats();
+  else if (S.view === 'fu') renderFU();
+  else renderDash();
+}
+
+/* ================= shared dashboard pieces ================= */
+const num = v => (v === '' || v == null || isNaN(Number(v))) ? null : Number(v);
+const isBad = (fl, v) => v != null && ((fl.flag && v > 0) || (fl.limit != null && v > fl.limit));
+function sumRows(rows, fields) {
+  const o = {};
+  fields.forEach(fl => {
+    let s = null;
+    rows.forEach(r => { const v = num(r[fl.key]); if (v != null) s = (s || 0) + v; });
+    o[fl.key] = s;
+  });
+  return o;
+}
+function table(head, rows) {
+  return `<div class="tablewrap"><table><thead><tr>${head.map((h, i) => `<th class="${i === 0 ? 'l' : ''}">${esc(h)}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map(r => `<tr>${r.map(c => `<td class="${c.l ? 'l' : ''} ${c.bad ? 'bad' : ''}">${esc(c.v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+function tilesFor(cfg, totals) {
+  let html = '';
+  cfg.sections.forEach(s => {
+    const nf = s.fields.filter(isNum);
+    if (!nf.length) return;
+    html += `<div class="sect">${esc(s.title)}</div><div class="tiles">` + nf.map(fl => {
+      const v = totals[fl.key];
+      return `<div class="tile ${isBad(fl, v) ? 'bad' : ''}"><div class="v">${v == null ? '–' : v}</div><div class="l">${esc(fl.label)}</div></div>`;
+    }).join('') + `</div>`;
+  });
+  return html;
+}
+// When a team has both a Daily and a Weekly L1.5 entry on the same day, count the Daily one.
+function preferDaily(rows) {
+  if (!rows.some(r => r.period)) return rows;
+  const d = rows.filter(r => r.period === 'Daily');
+  return d.length ? d : rows;
+}
+
+function formCard(k, d, opts) {
+  opts = opts || {};
+  const cfg = S.cfg.forms[k]; const fd = d.forms[k];
+  if (!cfg || !fd || cfg.scope === 'none') return '';
+  const fields = allFields(cfg).filter(f => f.type !== 'items');
+  const numF = fields.filter(isNum);
+  const textF = fields.filter(f => f.type === 'text' || f.type === 'clients');
+  const isL1 = cfg.extraCols.indexOf('coveredFor') >= 0 && !cfg.aggregate;
+  const isL15 = cfg.extraCols.indexOf('period') >= 0;
+  const perPerson = !cfg.aggregate && cfg.scope !== 'own' && k !== 'stats';
+  const who = r => isL1 ? (r.coveredFor + (r.submittedBy && r.submittedBy !== r.coveredFor ? ` (by ${r.submittedBy})` : '')) : r.submittedBy;
+
+  let html = `<div class="card"><h2>${esc(opts.title || cfg.title)}${cfg.aggregate ? ' <span class="muted">(team totals)</span>' : ''}</h2>`;
+
+  if (opts.unitTotal && S.cfg.teams.length > 1) {
+    const rows = fd.rows.filter(r => r.date === d.date);
+    html += `<h3>All teams</h3>` + (rows.length ? tilesFor(cfg, sumRows(rows, numF)) : `<p class="muted">No entries for ${esc(d.date)}.</p>`);
+  }
+
+  S.cfg.teams.forEach(team => {
+    const teamRows = fd.rows.filter(r => r.team === team);
+    let dayRows = teamRows.filter(r => r.date === d.date);
+    let label = '';
+    if (isL15) {
+      if (!dayRows.length) {
+        const wk = teamRows.filter(r => r.date >= shiftDate(d.date, -6)).sort((a, b) => b.date.localeCompare(a.date));
+        if (wk.length) { dayRows = wk.filter(r => r.date === wk[0].date); label = `Latest entry: ${wk[0].period || ''} · ${wk[0].date}`; }
+      } else label = `${[...new Set(dayRows.map(r => r.period))].join(' + ')} entry`;
+      dayRows = preferDaily(dayRows);
+    }
+    html += `<h3>Team ${esc(team)}${label ? ` <span class="muted">· ${esc(label)}</span>` : ''}</h3>`;
+    if (!dayRows.length) html += `<p class="muted">No entry for ${esc(d.date)}.</p>`;
+    else {
+      html += tilesFor(cfg, sumRows(dayRows, numF));
+      const notes = [];
+      dayRows.forEach(r => textF.forEach(fl => {
+        if (r[fl.key]) notes.push(`<li><b>${esc(fl.label)}</b>${perPerson ? ' (' + esc(who(r)) + ')' : ''}: ${esc(String(r[fl.key]).replace(/ ; /g, ', '))}</li>`);
+      }));
+      if (notes.length) html += `<ul class="notes">${notes.join('')}</ul>`;
+      if (perPerson && dayRows.length > 1) {
+        html += `<div class="sect">By person · ${esc(dayRows[0].date)}</div>` + table(['Name'].concat(numF.map(f => f.short || f.label)),
+          dayRows.map(r => [{ v: who(r), l: true }].concat(numF.map(fl => { const v = num(r[fl.key]); return { v: v == null ? '–' : v, bad: isBad(fl, v) }; }))));
+      }
+    }
+    const dates = [...new Set(teamRows.map(r => r.date))].sort().reverse();
+    if (dates.length) {
+      html += `<div class="sect">Last ${S.cfg.historyDays} days · Team ${esc(team)}</div>` + table(['Date'].concat(numF.map(f => f.short || f.label)),
+        dates.map(dt => {
+          const t = sumRows(preferDaily(teamRows.filter(r => r.date === dt)), numF);
+          return [{ v: dt, l: true }].concat(numF.map(fl => ({ v: t[fl.key] == null ? '–' : t[fl.key], bad: isBad(fl, t[fl.key]) })));
+        }));
+    }
+  });
+  return html + `</div>`;
+}
+
+function missingCard(d, forms) {
+  const m = d.missing.filter(x => forms.indexOf(x.form) >= 0);
+  if (!m.length) return '';
+  return `<div class="card missing"><h3>Not submitted for ${esc(d.date)}</h3>
+    ${m.map(x => `<span class="pill">${esc(x.name)} · T${esc(x.team)} · ${esc(x.title)}</span>`).join('')}</div>`;
+}
+
+function dateBar(id, value) {
+  return `<div class="card"><div class="row" style="margin:0">
+    <label class="ctl">Date <input type="date" id="${id}" value="${value}" max="${today()}"></label>
+    <button class="link" id="${id}-r">Refresh</button>
+    <span class="status" id="${id}-s">Loading…</span></div></div>`;
+}
+
+/* ================= dashboard ================= */
+const openItem = it => it.status === 'Open' || it.status === 'In progress';
+
+function interventionCard(d) {
+  if (!S.cfg.canItems) return '';
+  const items = (d.items || []).filter(openItem);
+  const mb = items.filter(i => i.type === 'mb_case');
+  const count = t => items.filter(i => i.type === t).length;
+  const lead = ['SP', 'HEAD'].indexOf(S.user.role) >= 0;
+  let html = `<div class="card"><h2>${lead ? 'Needs intervention' : 'Open follow-ups'}</h2>`;
+  if (lead) {
+    html += mb.length
+      ? `<ul class="ilist">${mb.map(i => `<li><span class="muted">${esc(i.date)}</span><span>Team ${esc(i.team)}</span><span class="c">${esc(i.client)}</span><span>${esc(i.note)}<div class="hint">Raised by ${esc(i.raisedBy)} · <span class="badge s-${i.status.replace(/ /g, '-')}">${esc(i.status)}</span></div></span><button class="ghost" data-goto="mb_case">Follow up</button></li>`).join('')}</ul>`
+      : `<p class="muted">No open Senior Physician / Medical Board cases.</p>`;
+  }
+  html += `<div class="counts">` + Object.keys(S.cfg.itemTypes).map(t =>
+    `<button class="ghost" data-goto="${t}">${esc(S.cfg.itemTypes[t])}: <b>${count(t)}</b> open</button>`).join('') + `</div></div>`;
+  return html;
+}
+
+async function renderDash(force) {
+  $('#app').innerHTML = dateBar('ddate', S.dashDate) + `<div id="dbody"></div>`;
+  $('#ddate').onchange = e => { S.dashDate = e.target.value || today(); renderDash(); };
+  $('#ddate-r').onclick = () => renderDash(true);
+  let d;
+  try { d = await getData(S.dashDate, force); } catch (e) { $('#ddate-s').textContent = e.message; return; }
+  $('#ddate-s').textContent = `Showing ${d.date} · trends from ${d.from}`;
+  $('#dbody').innerHTML = interventionCard(d) + missingCard(d, DASH_FORMS) + DASH_FORMS.map(k => formCard(k, d)).join('')
+    || '<div class="card muted">Nothing to show for your role yet.</div>';
+  $('#dbody').querySelectorAll('[data-goto]').forEach(b => b.onclick = () => { S.fu = { type: b.dataset.goto, status: 'open', team: 'all' }; S.view = 'fu'; renderShell(); });
+}
+
+/* ================= client stats page ================= */
+async function renderStats(force) {
+  $('#app').innerHTML = dateBar('sdate', S.statsDate) + `<div id="sbody"></div>`;
+  $('#sdate').onchange = e => { S.statsDate = e.target.value || today(); renderStats(); };
+  $('#sdate-r').onclick = () => renderStats(true);
+  let d;
+  try { d = await getData(S.statsDate, force); } catch (e) { $('#sdate-s').textContent = e.message; return; }
+  $('#sdate-s').textContent = `Showing ${d.date} · trends from ${d.from}`;
+  $('#sbody').innerHTML = missingCard(d, ['stats']) + formCard('stats', d, { title: 'Client stats', unitTotal: true });
+}
+
+/* ================= follow-ups page ================= */
+async function renderFU(force) {
+  const tOpts = [['all', 'All types']].concat(Object.entries(S.cfg.itemTypes));
+  const sOpts = [['open', 'Open & in progress'], ['closed', 'Resolved / closed'], ['all', 'All']];
+  const teamOpts = [['all', 'All teams']].concat(S.cfg.teams.map(t => [t, 'Team ' + t]));
+  const sel = (id, opts, v) => `<select id="${id}">${opts.map(([k, l]) => `<option value="${esc(k)}" ${k === v ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>`;
+  $('#app').innerHTML = `<div class="card"><h2>Follow-ups</h2>
+    <div class="filters">
+      <label class="ctl">Type ${sel('ft', tOpts, S.fu.type)}</label>
+      <label class="ctl">Status ${sel('fs', sOpts, S.fu.status)}</label>
+      <label class="ctl">Team ${sel('fteam', teamOpts, S.fu.team)}</label>
+      <button class="link" id="fr">Refresh</button>
+      <span class="status" id="fst">Loading…</span>
+    </div></div><div id="fbody"></div>`;
+  $('#ft').onchange = e => { S.fu.type = e.target.value; renderFU(); };
+  $('#fs').onchange = e => { S.fu.status = e.target.value; renderFU(); };
+  $('#fteam').onchange = e => { S.fu.team = e.target.value; renderFU(); };
+  $('#fr').onclick = () => renderFU(true);
+
+  let d;
+  try { d = await getData(today(), force); } catch (e) { $('#fst').textContent = e.message; return; }
+  let items = d.items || [];
+  if (S.fu.type !== 'all') items = items.filter(i => i.type === S.fu.type);
+  if (S.fu.team !== 'all') items = items.filter(i => i.team === S.fu.team);
+  if (S.fu.status === 'open') items = items.filter(openItem);
+  if (S.fu.status === 'closed') items = items.filter(i => !openItem(i));
+  $('#fst').textContent = `${items.length} item${items.length === 1 ? '' : 's'}`;
+
+  $('#fbody').innerHTML = items.length ? items.map(i => `
+    <div class="item ${i.type === 'mb_case' ? 'mb' : ''}">
+      <div class="ihead"><span class="client">${esc(i.client)}</span><span class="badge s-${esc(i.status.replace(/ /g, '-'))}">${esc(i.status)}</span></div>
+      <div class="imeta">${esc(S.cfg.itemTypes[i.type] || i.type)} · Team ${esc(i.team)} · ${esc(i.date)} · raised by ${esc(i.raisedBy)}</div>
+      ${i.note ? `<div class="inote">${esc(i.note)}</div>` : ''}
+      ${i.followups.length ? `<ul class="log">${i.followups.map(f => `<li><b>${esc(f.at)} · ${esc(f.by)}</b> — ${esc(f.status)}${f.note ? ': ' + esc(f.note) : ''}</li>`).join('')}</ul>` : ''}
+      <div class="iform">
+        <textarea data-n="${esc(i.id)}" placeholder="Follow-up note"></textarea>
+        <select data-s="${esc(i.id)}">${S.cfg.itemStatuses.map(s => `<option ${s === i.status ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select>
+        <button class="primary sm" data-u="${esc(i.id)}">Update</button>
+      </div>
+    </div>`).join('') : `<div class="card muted">Nothing here.</div>`;
+
+  $('#fbody').querySelectorAll('[data-u]').forEach(b => b.onclick = async () => {
+    const id = b.dataset.u;
+    const note = $(`[data-n="${CSS.escape(id)}"]`).value;
+    const status = $(`[data-s="${CSS.escape(id)}"]`).value;
+    b.disabled = true; b.textContent = 'Saving…';
+    try { const r = await api('followup', { id, note, status }); setItems(r.items); toast('Follow-up saved'); renderFU(); }
+    catch (e) { toast(e.message); b.disabled = false; b.textContent = 'Update'; }
+  });
+}
+
+/* ================= daily entry ================= */
+function resetCovered() {
+  const m = (S.cfg.members[S.entry.team] || { L1: [] }).L1;
+  S.entry.coveredFor = (S.user.role === 'L1' && m.indexOf(S.user.name) >= 0) ? S.user.name : (m[0] || '');
+}
+const entryKey = () => [S.entry.form, S.entry.team, S.entry.date, S.entry.coveredFor, S.entry.period].join('|');
+
+function clientPicker(team, target, value) {
+  const list = S.cfg.clients[team] || [];
+  return `<span class="cpick"><select data-client="${esc(target)}">
+      <option value="">Select client…</option>
+      ${list.map(n => `<option ${n === value ? 'selected' : ''}>${esc(n)}</option>`).join('')}
+      <option value="__new">+ Add new client…</option>
+    </select>
+    <span class="newc" hidden><input placeholder="New client name" data-newname="${esc(target)}">
+      <button type="button" class="ghost" data-addclient="${esc(target)}">Add</button>
+      <button type="button" class="link" data-cancelnew="1">Cancel</button></span></span>`;
+}
+
+function collectDraft() {
+  const f = $('#ef'); if (!f) return;
+  const cfg = S.cfg.forms[S.entry.form]; const dr = S.entry.draft;
+  allFields(cfg).forEach(fl => {
+    if (fl.type === 'items') {
+      dr[fl.key] = [...f.querySelectorAll(`.itemrow[data-f="${fl.key}"]`)].map(row => ({
+        client: (row.querySelector('select').value || '').replace(/^__new$/, ''),
+        note: row.querySelector('textarea').value
+      }));
+    } else if (fl.type !== 'clients' && f.elements[fl.key]) dr[fl.key] = f.elements[fl.key].value;
+  });
+}
+
+function renderEntryForm(d) {
+  const cfg = S.cfg.forms[S.entry.form]; const dr = S.entry.draft; const team = S.entry.team;
+  const saved = (d.items || []).filter(i => i.date === S.entry.date && i.team === team);
+  $('#eform').innerHTML = `<form id="ef">
+    ${cfg.sections.map(s => `
+      <fieldset><legend>${esc(s.title)}</legend><div class="fgrid">
+        ${s.fields.map(fl => {
+          if (fl.type === 'text') return `<label class="full">${esc(fl.label)}<textarea name="${fl.key}">${esc(dr[fl.key] || '')}</textarea></label>`;
+          if (fl.type === 'clients') {
+            const list = dr[fl.key] || [];
+            return `<div class="itembox"><div class="ttl">${esc(fl.label)}</div>
+              <div class="chips">${list.length ? list.map((n, i) => `<span class="chip">${esc(n)}<button type="button" data-delchip="${fl.key}:${i}" aria-label="Remove">×</button></span>`).join('') : '<span class="muted">None added yet.</span>'}</div>
+              ${clientPicker(team, 'clients:' + fl.key, '')}
+              ${fl.key === 'ext_created_clients' ? '<div class="hint">Adding clients here updates the “Created” count. You can still edit the number.</div>' : ''}</div>`;
+          }
+          if (fl.type === 'items') {
+            const done = saved.filter(i => i.type === fl.itemType);
+            const rows = dr[fl.key] || [];
+            return `<div class="itembox"><div class="ttl">${esc(fl.label)}</div>
+              ${done.length ? `<div class="hint">Already added for this day:</div><ul class="saved">${done.map(i => `<li><b>${esc(i.client)}</b>${i.note ? ' — ' + esc(i.note) : ''} <span class="muted">(${esc(i.raisedBy)}, ${esc(i.status)})</span></li>`).join('')}</ul>` : ''}
+              ${rows.map((r, i) => `<div class="itemrow" data-f="${fl.key}">${clientPicker(team, `items:${fl.key}:${i}`, r.client)}
+                <textarea placeholder="Note">${esc(r.note || '')}</textarea>
+                <button type="button" class="link" data-delitem="${fl.key}:${i}">Remove</button></div>`).join('')}
+              <button type="button" class="ghost" data-additem="${fl.key}">+ Add client</button>
+              <div class="hint">These go to the Follow-ups page (doctors and Senior Physician only).</div></div>`;
+          }
+          return `<label>${esc(fl.label)}<input type="number" min="0" step="1" inputmode="numeric" name="${fl.key}" value="${esc(dr[fl.key] == null ? '' : dr[fl.key])}"></label>`;
+        }).join('')}
+      </div></fieldset>`).join('')}
+    <button class="primary" id="esave">Save entry</button>
+    <span class="muted" style="margin-left:8px">Saving again for the same day updates the entry.</span>
+  </form>`;
+
+  const f = $('#ef');
+  f.addEventListener('input', collectDraft);
+  f.onsubmit = saveEntry;
+  f.addEventListener('change', e => {
+    const t = e.target;
+    if (!t.matches('select[data-client]')) return;
+    if (t.value === '__new') {
+      const box = t.parentElement.querySelector('.newc'); box.hidden = false; box.querySelector('input').focus();
+      return;
+    }
+    collectDraft();
+    const [kind, key] = t.dataset.client.split(':');
+    if (kind === 'clients' && t.value) addChip(key, t.value);
+  });
+  f.addEventListener('click', async e => {
+    const t = e.target.closest('button'); if (!t || t.id === 'esave') return;
+    if (t.dataset.cancelnew) { collectDraft(); renderEntryForm(d); return; }
+    if (t.dataset.additem) { collectDraft(); (S.entry.draft[t.dataset.additem] = S.entry.draft[t.dataset.additem] || []).push({ client: '', note: '' }); renderEntryForm(d); return; }
+    if (t.dataset.delitem) { collectDraft(); const [k, i] = t.dataset.delitem.split(':'); S.entry.draft[k].splice(+i, 1); renderEntryForm(d); return; }
+    if (t.dataset.delchip) { collectDraft(); const [k, i] = t.dataset.delchip.split(':'); S.entry.draft[k].splice(+i, 1); syncCreated(k); renderEntryForm(d); return; }
+    if (t.dataset.addclient) {
+      const target = t.dataset.addclient;
+      const name = t.parentElement.querySelector('input').value.trim();
+      if (!name) return toast('Enter the client name');
+      t.disabled = true;
+      try {
+        const r = await api('addClient', { team, name });
+        mergeClients(r.clients);
+        collectDraft();
+        const [kind, key, idx] = target.split(':');
+        if (kind === 'items') S.entry.draft[key][+idx].client = r.name;
+        else { addChip(key, r.name, true); }
+        toast('Client added');
+        renderEntryForm(d);
+      } catch (err) { toast(err.message); t.disabled = false; }
+    }
+  });
+  function addChip(key, name, noRender) {
+    const list = S.entry.draft[key] = S.entry.draft[key] || [];
+    if (list.indexOf(name) < 0) list.push(name);
+    syncCreated(key);
+    if (!noRender) renderEntryForm(d);
+  }
+}
+function syncCreated(key) {
+  if (key === 'ext_created_clients') S.entry.draft.ext_created = String((S.entry.draft[key] || []).length);
+}
+
+async function renderEntry() {
+  const forms = ENTRY_ORDER.filter(k => S.cfg.forms[k] && S.cfg.forms[k].canSubmit);
+  if (forms.indexOf(S.entry.form) < 0) S.entry.form = forms[0];
+  const cfg = S.cfg.forms[S.entry.form];
+  const labels = { doctor: 'Doctor daily entry', l1: 'L1 daily entry', l15: 'L1.5 daily / weekly entry', stats: 'Client stats entry' };
+  const needsCover = cfg.extraCols.indexOf('coveredFor') >= 0;
+  const needsPeriod = cfg.extraCols.indexOf('period') >= 0;
+  const l1s = (S.cfg.members[S.entry.team] || { L1: [] }).L1;
+
+  $('#app').innerHTML = `<div class="card">
+      <h2>Daily entry</h2>
+      <div class="row ctlrow">
+        <label class="ctl">Entry type
+          <select id="eform-sel">${forms.map(k => `<option value="${k}" ${k === S.entry.form ? 'selected' : ''}>${esc(labels[k] || S.cfg.forms[k].title)}</option>`).join('')}</select>
+        </label>
+        <label class="ctl">Team
+          <select id="eteam">${S.cfg.teams.map(t => `<option ${t === S.entry.team ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>
+        </label>
+        <label class="ctl">Date <input type="date" id="edate" value="${S.entry.date}" max="${today()}"></label>
+        ${needsCover ? `<label class="ctl">Entry for (L1)
+          <select id="ecover">${l1s.length ? l1s.map(n => `<option ${n === S.entry.coveredFor ? 'selected' : ''}>${esc(n)}</option>`).join('') : '<option value="">No L1 in this team</option>'}</select></label>` : ''}
+        ${needsPeriod ? `<label class="ctl">Period
+          <select id="eperiod">${['Daily', 'Weekly'].map(p => `<option ${p === S.entry.period ? 'selected' : ''}>${p}</option>`).join('')}</select></label>` : ''}
+      </div>
+      <div class="status" id="estatus">Loading…</div>
+      ${needsCover && S.user.role !== 'L1' ? '<div class="hint">Choose the L1 whose patients this entry covers. One L1 entry per team per day is enough.</div>' : ''}
+    </div>
+    <div class="card" id="eform"></div>`;
+
+  $('#eform-sel').onchange = e => { S.entry.form = e.target.value; renderEntry(); };
+  $('#eteam').onchange = e => { S.entry.team = e.target.value; resetCovered(); renderEntry(); };
+  $('#edate').onchange = e => { S.entry.date = e.target.value || today(); renderEntry(); };
+  if ($('#ecover')) $('#ecover').onchange = e => { S.entry.coveredFor = e.target.value; renderEntry(); };
+  if ($('#eperiod')) $('#eperiod').onchange = e => { S.entry.period = e.target.value; renderEntry(); };
+
+  let d;
+  try { d = await getData(S.entry.date); } catch (e) { $('#estatus').textContent = e.message; return; }
+  const rows = (d.forms[S.entry.form] || { rows: [] }).rows;
+  const existing = rows.find(r => r.date === S.entry.date && r.team === S.entry.team &&
+    (S.entry.form === 'doctor' ? r.submittedBy === S.user.name : true) &&
+    (!needsCover || r.coveredFor === S.entry.coveredFor) &&
+    (!needsPeriod || r.period === S.entry.period));
+
+  if (S.entry.loadedKey !== entryKey()) {
+    const dr = {};
+    allFields(cfg).forEach(fl => {
+      if (fl.type === 'items') dr[fl.key] = [];
+      else if (fl.type === 'clients') dr[fl.key] = existing && existing[fl.key] ? String(existing[fl.key]).split(' ; ').filter(Boolean) : [];
+      else dr[fl.key] = existing && existing[fl.key] != null ? existing[fl.key] : '';
+    });
+    S.entry.draft = dr; S.entry.loadedKey = entryKey();
+  }
+  $('#estatus').textContent = existing ? `Already submitted by ${existing.submittedBy} — you are editing it.` : 'No entry yet for this day.';
+  renderEntryForm(d);
+}
+
+async function saveEntry(e) {
+  e.preventDefault();
+  collectDraft();
+  const btn = $('#esave'); btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const r = await api('submit', {
+      form: S.entry.form, team: S.entry.team, date: S.entry.date,
+      coveredFor: S.entry.coveredFor, period: S.entry.period, values: S.entry.draft
+    });
+    mergeClients(r.clients);
+    S.cache = {}; S.entry.loadedKey = '';
+    toast((r.updated ? 'Entry updated' : 'Entry saved') + (r.itemsAdded ? ` · ${r.itemsAdded} follow-up item${r.itemsAdded > 1 ? 's' : ''} added` : ''));
+    renderEntry();
+  } catch (err) { toast(err.message); btn.disabled = false; btn.textContent = 'Save entry'; }
+}
+
+/* ================= start ================= */
+$('#logout').onclick = () => { store.del('udt_code'); S.code = ''; S.user = null; renderLogin(); };
+const saved = store.get('udt_code');
+if (saved) { $('#app').innerHTML = '<div class="card muted">Signing in…</div>'; login(saved); } else renderLogin();
+</script>
+</body>
+</html>
